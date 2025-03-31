@@ -63,7 +63,7 @@ class MultiLayerFeedForwardModel(nn.Module):
         
         for neurons in self.config:
             layers.append(nn.Linear(prev_size, neurons))
-            layers.append(nn.ReLu())  # Activation function
+            layers.append(nn.ReLU())  # Activation function
             prev_size = neurons
         
         layers.append(nn.Linear(prev_size, 1))  # Output layer for regression
@@ -72,7 +72,14 @@ class MultiLayerFeedForwardModel(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-    def fit(self, X_train, Y_train, epochs=1000, learning_rate=0.01, step_size=500, gamma=0.9):
+    def fit(self, 
+            X_train, 
+            Y_train, 
+            epochs=2000, 
+            learning_rate=0.01, 
+            step_size=100, 
+            gamma=0.9,
+            ):
         """
         Train the neural network with dynamic learning rate.
         
@@ -83,8 +90,8 @@ class MultiLayerFeedForwardModel(nn.Module):
         :param step_size: Number of epochs after which LR is reduced
         :param gamma: Multiplicative factor to reduce LR
         """
-        X_train = torch.tensor(X_train.values, dtype=torch.float32)
-        Y_train = torch.tensor(Y_train.values, dtype=torch.float32).view(-1, 1)
+        X_train = torch.tensor(X_train, dtype=torch.float32)
+        Y_train = torch.tensor(Y_train, dtype=torch.float32).view(-1, 1)
 
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -103,7 +110,8 @@ class MultiLayerFeedForwardModel(nn.Module):
             scheduler.step()
             
             if (epoch + 1) % 10 == 0:
-                print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}, LR: {scheduler.get_last_lr()}')
+                print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.8f}, LR: {scheduler.get_last_lr()}')
+
 
 
     def test(self, X_test, Y_test):
@@ -123,7 +131,15 @@ class MultiLayerFeedForwardModel(nn.Module):
         with torch.no_grad():
             return self.forward(X).numpy()
 
+    def store(self, path:str):
+        """Store the model parameters."""
+        torch.save(self.state_dict(), path)
+        print(f'Model stored at {path}')
     
+    def load(self, path:str):
+        """Load the model parameters."""
+        self.load_state_dict(torch.load(path))
+        print(f'Model loaded from {path}')
 
 
 

@@ -41,8 +41,10 @@ def save_submission(X_sub, Y_sub, save_path: str):
     # 41259,457
     # etc.
 
+
     # Y_sub has to be rounded
     Y_sub = Y_sub.round().astype(int)
+    print(Y_sub)
     submission = pd.DataFrame({
         'id': X_sub['id'],
         'co2': Y_sub
@@ -56,7 +58,7 @@ def save_submission(X_sub, Y_sub, save_path: str):
 if __name__ == '__main__':
     data_path: str = 'data/train.csv'
     submission_data_path: str = 'data/submission_test.csv'
-    normalisation: bool = False
+    normalisation: bool = True
 
     # preprocess the data
     X, Y, X_submission, min_co2, max_co2 = get_datasets(
@@ -72,27 +74,50 @@ if __name__ == '__main__':
 
     # # import the model
     # model = LinearRegressionModel()
-    model = MultiLayerFeedForwardModel(input_size=X_train.drop(columns=['id']).shape[1], config_path='network_configs/1.json')
+    model = MultiLayerFeedForwardModel(input_size=X_train.drop(columns=['id']).shape[1], config_path='network_configs/1/1.json')
+    
+    # model.load(path='network_configs/1/1.pth')
     
     # train the model (without id column)
-    model.fit(X_train.drop(columns=['id']), Y_train, epochs=10000)
+    model.fit(
+        X_train=X_train.drop(columns=['id']).values, 
+        Y_train=Y_train.values, 
+        epochs=1000,
+        learning_rate=0.0001,
+        step_size=100,
+        gamma=0.95
+    )
+    model.store(path='network_configs/1/1.pth')
 
-    # # test the model
-    # mae = model.test(X_test.drop(columns=['id']), Y_test)
+    # load model 
+
+
+    # test the model
+    mae = model.test(
+        X_test=X_test.drop(columns=['id']).values, 
+        Y_test=Y_test.values
+    )
+    # unnormalize the mae
+    if normalisation:
+        mae = mae * (max_co2 - min_co2)
     # print(f'Mean Absolute Error: {mae}')
 
-    # # export for submission
+    # export for submission
 
-    # # predict on the submission data
-    # Y_submission_norm = model.predict(X_submission.drop(columns=['id']))
-    # # denormalize the predicted values
-    # Y_submission = Y_submission_norm
-    # if normalisation:
-    #     Y_submission = Y_submission_norm * (max_co2 - min_co2) + min_co2
+    # predict on the submission data
+    Y_submission_norm = model.predict(
+        X=X_submission.drop(columns=['id']).values
+    )
+    Y_submission_norm = Y_submission_norm.flatten()
+    # denormalize the predicted values
+    Y_submission = Y_submission_norm
+
+    if normalisation:
+        Y_submission = Y_submission_norm * (max_co2 - min_co2) + min_co2
 
 
-    # # save the submission
-    # save_path = 'submission_data/linear_regression_unormalised.csv'
-    # save_submission(X_submission, Y_submission, save_path)
+    # save the submission
+    save_path = 'submission_data/multilayer.csv'
+    save_submission(X_submission, Y_submission, save_path)
 
     # save the model
