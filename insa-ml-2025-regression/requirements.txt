@@ -5,3 +5,5 @@ matplotlib
 seaborn
 mpld3
 plotly
+torch
+torchvision
