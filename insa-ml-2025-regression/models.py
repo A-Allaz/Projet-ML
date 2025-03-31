@@ -141,6 +141,3 @@ class MultiLayerFeedForwardModel(nn.Module):
         self.load_state_dict(torch.load(path))
         print(f'Model loaded from {path}')
 
-
-
-        

@@ -100,7 +100,7 @@ if __name__ == '__main__':
     # unnormalize the mae
     if normalisation:
         mae = mae * (max_co2 - min_co2)
-    # print(f'Mean Absolute Error: {mae}')
+    print(f'Mean Absolute Error: {mae}')
 
     # export for submission
 
