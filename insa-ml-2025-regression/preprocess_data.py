@@ -36,7 +36,7 @@ def preprocess_data_target(data_path, save_path):
 
     return data, min_co2, max_co2
 
-if def __name__ == '__main__':
+if __name__ == '__main__':
     fileToClean = 'data/train.csv'
     cleanedFile = 'data/cleaned_train.csv'
     preprocess_data_target(fileToClean, cleanedFile)
