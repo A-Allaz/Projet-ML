@@ -86,8 +86,11 @@ def linear_regression_model_with_encoding(data, target_column):
     
     return y_pred, mae
 
-# Charger les données
-data = pd.read_csv('data/train.csv')
-predictions,mae=linear_regression_model_with_encoding(data, 'co2')
-print("Prédictions sur l'ensemble de test:", predictions)
-print('Erreur absolue moyenne:', mae)
+if __name__ == "__main__":
+    # Appliquer le modèle avec encodage
+    # Charger les données
+    
+    data = pd.read_csv('data/train.csv')
+    predictions,mae=linear_regression_model_with_encoding(data, 'co2')
+    print("Prédictions sur l'ensemble de test:", predictions)
+    print('Erreur absolue moyenne:', mae)

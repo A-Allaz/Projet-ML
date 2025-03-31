@@ -1,2 +1,3 @@
 # remove virtual environment
-insa-ml-2025-regression/venv
+insa-ml-2025-regression/venv/
+venv/
