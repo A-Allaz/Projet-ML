@@ -1,0 +1,10 @@
+Script started on 2025-03-31 08:25:33+02:00 [TERM="xterm-256color" TTY="/dev/cons0" COLUMNS="171" LINES="13"]
+[?2004hsh-5.2$ ^C[?2004l[?2004h[?2004l
+[?2004hsh-5.2$ q
+[?2004lsh: q: command not found
+[?2004hsh-5.2$ :q!
+[?2004lsh: :q!: command not found
+[?2004hsh-5.2$ [?2004l
+exit
+
+Script done on 2025-03-31 08:25:42+02:00 [COMMAND_EXIT_CODE="127"]

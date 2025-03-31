@@ -7,9 +7,13 @@ try:
     in_file = "./data/" + sys.argv[1] + ".csv"
     file = open(in_file, "r")
 except:
-    sys.exit("ERROR. Bad file name")
+    sys.exit("Bad file name or file not found.")
 df = pd.read_csv(file)
 print("SHAPE : ", df.shape)
+
+df["new_hcnox"] = df['hcnox'].fillna(df['hc'] + df['nox'])
+print(df["new_hcnox"])
+
 print("\n\n\n\nINFO : ")
 print(df.info())
 print("\n\n\n\nDESCRIBE : ")
@@ -27,11 +31,8 @@ print(df[df[['hc', 'nox', 'hcnox']].isnull().all(axis=1)])
 print(df[df['id'] == 769])
 print(df[df['id'] == 796])
 
-cols = df.columns
+df_sample = df.sample(1000, random_state=42)
+cols = df_sample.columns
 fig = plt.figure(figsize = (20,20))
-# pair plot
 g = sns.pairplot(data=df[cols])
-
-path = "./plots/" + sys.argv[1] + "_pairplot.pdf"
-
-g.savefig(path, format='pdf')
+plt.show()
