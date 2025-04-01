@@ -14,25 +14,29 @@ class PreProcessingData:
         # Store the target column
         self.target_column = target_column
 
-
-        # boolean for minmax normalisation
+        
+        # boolean for normalisation and minmax normalisation
+        self.done_normalisation = False
         self.minmax = False
 
 
+        # save one hot columns
+        self.one_hot_columns = []
+
+
+
     def __load_data__(self):
-        data = pd.read_csv(self.data_path)
-        self.data = data
+        self.data = pd.read_csv(self.data_path)
+        self.sub_data = pd.read_csv(self.submission_data_path)
 
 
         # loading data into input x and output y
-        self.x = data.drop(columns=['co2'])
-        self.y = data['co2']
+        self.x =self.data.drop(columns=['co2'])
+        self.y = self.data['co2']
 
         # loading submission data into input x (we don’t have the output y)
         self.sub_x = pd.read_csv(self.submission_data_path)
 
-        # save one hot columns
-        self.one_hot_columns = []
 
     # full execution
     def full_preprocess(self):
@@ -53,7 +57,9 @@ class PreProcessingData:
 
         # NORMALISATION
         # self.normalisation_z_score() # perform normalisation on non one hot columns
-        # self.normalisation_min_max()
+        self.normalisation_min_max()
+        print("Preprocessing done")
+        return self
 
 
 
@@ -87,11 +93,12 @@ class PreProcessingData:
         # remove the one hot columns
         numerical_columns = [col for col in numerical_columns if col not in self.one_hot_columns]
 
+
         for col in numerical_columns:
-            # normalise the data
-            self.x[col] = (self.x[col] - self.x[col].min()) / (self.x[col].max() - self.x[col].min())
             # normalise the submission data
             self.sub_x[col] = (self.sub_x[col] - self.x[col].min()) / (self.x[col].max() - self.x[col].min())
+            # normalise the data
+            self.x[col] = (self.x[col] - self.x[col].min()) / (self.x[col].max() - self.x[col].min())
 
         # store the min and max values of co2 for denormalisation
         self.max_co2 = self.y.max()
@@ -101,6 +108,7 @@ class PreProcessingData:
 
         # set the minmax boolean to true
         self.minmax = True
+        self.done_normalisation = True
 
     def normalisation_z_score(self):
         # normalise the data
@@ -118,21 +126,42 @@ class PreProcessingData:
             self.sub_x[col] = (self.sub_x[col] - self.x[col].mean()) / self.x[col].std()
         # normalise the output y
         self.y = (self.y - self.y.mean()) / self.y.std()
+
+        self.done_normalisation = True
         
 
     def denormalise_output(
             self,
             output,
+    ):  
+        if self.done_normalisation:
+            # denormalise the output which is a co2 prediction
+            # we previously stored the min and max values of co2 in the data
+            # so we can denormalise the output
+            if (self.minmax):
+                # denormalise using min max
+                output = output * (self.max_co2 - self.min_co2) + self.min_co2
+            else:
+                # denormalise using z-score
+                output = output * self.y.std() + self.y.mean()
+
+        return output
+    
+    def denormalise_mae(
+            self,
+            mae,
     ):
-        # denormalise the output which is a co2 prediction
-        # we previously stored the min and max values of co2 in the data
-        # so we can denormalise the output
-        if (self.minmax):
-            # denormalise using min max
-            output = output * (self.max_co2 - self.min_co2) + self.min_co2
-        else:
-            # denormalise using z-score
-            output = output * self.y.std() + self.y.mean()
+        if self.done_normalisation:
+            # denormalise the mae which is a co2 prediction
+            # we previously stored the min and max values of co2 in the data
+            # so we can denormalise the output
+            if (self.minmax):
+                # denormalise using min max
+                mae = mae * (self.max_co2 - self.min_co2)
+            else:
+                # denormalise using z-score
+                mae = mae * self.y.std()
+        return mae
 
 
     def combine_hc_nox(self):
@@ -163,9 +192,9 @@ class PreProcessingData:
         # fill the na values with the mean of the column
         numerical_columns = self.x.select_dtypes(include=['float64', 'int64']).columns.tolist()
         for col in numerical_columns:
-            self.x[col] = self.x[col].fillna(self.x[col].mean())
-            # fill the submission data
             self.sub_x[col] = self.sub_x[col].fillna(self.x[col].mean())
+            # fill the submission data
+            self.x[col] = self.x[col].fillna(self.x[col].mean())
 
     def one_hot_encoding(self, threshold: int = 28):
         # for each column that contains less than threshold different values
@@ -173,6 +202,7 @@ class PreProcessingData:
 
         # for example if we have a column with 3 different values (a, b, c)
         # we will create 3 columns (a, b, c) and attribute 1 or 0 to the column
+
 
         # Identify categorical columns with a low number of unique values
         categorical_columns = self.x.select_dtypes(include=['object']).columns.tolist()

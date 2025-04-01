@@ -102,7 +102,7 @@ class MultiLayerFeedForwardModel(nn.Module):
         step_size=100,
         gamma=0.9,
         batch_size=32,
-        patience=10,
+        patience=None,
         store_improvement: bool=False,
     ):
 
@@ -125,7 +125,7 @@ class MultiLayerFeedForwardModel(nn.Module):
         Y_val = torch.tensor(Y_val, dtype=torch.float32).view(-1, 1).to(self.device)
 
         dataset = TensorDataset(X_train, Y_train)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
 
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -148,25 +148,26 @@ class MultiLayerFeedForwardModel(nn.Module):
             # Update Learning Rate
             scheduler.step()
 
-            # Validation phase
-            self.eval()  # Set the model to evaluation mode
-            with torch.no_grad():
-                val_predictions = self.forward(X_val)
-                val_loss = criterion(val_predictions, Y_val).item()
-
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                patience_counter = 0
-                if store_improvement and self.save_path is not None:
-                    torch.save(self.state_dict(), self.save_path)  # Save the best model
-            else:
-                patience_counter += 1
-
-            if patience_counter >= patience:
-                print(f'Early stopping at epoch {epoch+1}')
-                break
 
             if (epoch + 1) % 10 == 0:
+                # Validation phase
+                self.eval()  # Set the model to evaluation mode
+                with torch.no_grad():
+                    val_predictions = self.forward(X_val)
+                    val_loss = criterion(val_predictions, Y_val).item()
+
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    patience_counter = 0
+                    if store_improvement and self.save_path is not None:
+                        torch.save(self.state_dict(), self.save_path)  # Save the best model
+                else:
+                    patience_counter += 1
+                if patience: # we now save the model if the validation loss is not improving
+                    if patience_counter >= patience:
+                        print(f'Early stopping at epoch {epoch+1}')
+                        break
+                    
                 print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.8f}, Val Loss: {val_loss:.8f}, LR: {scheduler.get_last_lr()}')
 
 

@@ -3,9 +3,10 @@ import pandas as pd
 from sklearn import model_selection
 import torch
 from torch import nn
+import numpy as np
 # this file is used to run models
 # it will import models and try to run them on the data
-from preprocess_data import preprocess_data_target
+from preprocess_data import PreProcessingData
 from models import LinearRegressionModel, MultiLayerFeedForwardModel
 
 def get_datasets(data_path: str, submission_data_path: str, column_target: str, normalisation: bool = True):
@@ -52,23 +53,22 @@ if __name__ == '__main__':
     submission_data_path: str = 'data/submission_test.csv'
     normalisation: bool = True
 
-    # preprocess the data
-    X, Y, X_submission, min_co2, max_co2 = get_datasets(
+    data: PreProcessingData = PreProcessingData(
         data_path=data_path,
         submission_data_path=submission_data_path,
-        column_target='co2',
-        normalisation=normalisation
-    )
+        target_column='co2',
+    ).full_preprocess()
+    
 
     # split the data into train and test sets
-    X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, Y, test_size=0.2, random_state=42)
+    X_train, X_test, Y_train, Y_test = model_selection.train_test_split(data.x, data.y, test_size=0.2, random_state=42)
 
 
     # import the model
     # model = LinearRegressionModel()
     storage_path: str = 'network_configs/1/1_e1000_b128_p50.pth'
     model = MultiLayerFeedForwardModel(
-        input_size=X_train.drop(columns=['id']).shape[1], 
+        input_size=X_train.shape[1], 
         config_path='network_configs/1/1.json',
         save_path=storage_path
     )
@@ -77,45 +77,54 @@ if __name__ == '__main__':
     
     # # train the model (without id column)
     # model.fit(
-    #     X_train=X_train.drop(columns=['id']).values, 
+    #     X_train=X_train.values, 
     #     Y_train=Y_train.values,
-    #     X_val=X_test.drop(columns=['id']).values,
+    #     X_val=X_test.values,
     #     Y_val=Y_test.values,
-    #     epochs=5000,
+    #     epochs=1000,
     #     learning_rate=0.001,
-    #     step_size=100,
+    #     step_size=50,
     #     gamma=0.9,
     #     batch_size=128,
-    #     patience=50000,
+    #     patience=None,
     #     store_improvement=True,
     # )
-    # model.store(path=storage_path)
 
 
     # test the model
     mae = model.test(
-        X_test=X_test.drop(columns=['id']).values, 
+        X_test=X_test.values, 
         Y_test=Y_test.values
     )
-    # unnormalize the mae
-    if normalisation:
-        mae = mae * (max_co2 - min_co2)
-    print(f'Mean Absolute Error: {mae}')
+    print(f'MAE: {data.denormalise_mae(mae)}')
 
-    # export for submission
+
 
     # predict on the submission data
-    Y_submission_norm = model.predict(
-        X=X_submission.drop(columns=['id']).values
+    y_sub = model.predict(
+        X=data.sub_x.values
     )
-    Y_submission_norm = Y_submission_norm.flatten()
-    # denormalize the predicted values
-    Y_submission = Y_submission_norm
+    y_testing = model.predict(
+        X=X_test.values
+    )
 
-    if normalisation:
-        Y_submission = Y_submission_norm * (max_co2 - min_co2) + min_co2
+    
+    # Assuming y_sub is a NumPy array
+    nan_indices = np.isnan(data.sub_x)
+    # Check if there are any NaN values
+    if np.any(nan_indices):
+        print("There are NaN values in y_sub.")
+        # Optionally, print the indices of NaN values
+        print("Indices of NaN values:", np.where(nan_indices))
+    else:
+        print("There are no NaN values in y_sub.")
+
+
+    y_sub = data.denormalise_output(output=y_sub.flatten())
+    # denormalize the predicted values
+
 
 
     # save the submission
     save_path = 'submission_data/multilayer.csv'
-    save_submission(X_submission, Y_submission, save_path)
+    save_submission(data.sub_data, y_sub, save_path)
