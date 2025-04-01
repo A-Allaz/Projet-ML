@@ -1,3 +1,4 @@
 # remove virtual environment
 insa-ml-2025-regression/venv/
 venv/
+__pycache__
