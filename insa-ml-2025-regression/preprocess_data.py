@@ -2,6 +2,38 @@ import pandas as pd
 import numpy as np
 import os
 
+class PreProcessingData:
+    def __init__(self, data_path: str, submission_data_path: str):
+        self.data_path = data_path
+        self.submission_data_path = submission_data_path
+
+        # Load the data
+        self.__load_data__()
+
+    def __load_data__(self):
+        pass
+
+    def drop_low_correlation_columns(self):
+        pass
+
+    def drop_text_columns(self):
+        pass
+
+    def normalisation(self):
+        pass
+
+    def combine_hc_nox(self):
+        pass
+
+    def smooth_target_encoding(self):
+        pass
+
+    def fill_na_values(self):
+        pass
+
+    def change_low_number_of_categories(self):
+        pass
+
 def preprocess_data_target(data_path, submission_data_path, normalisation, save_path:str = None):
     data = pd.read_csv(data_path)
     submission_data = pd.read_csv(submission_data_path)
@@ -48,6 +80,7 @@ def preprocess_data_target(data_path, submission_data_path, normalisation, save_
         submission_data.to_csv(save_path.replace('.csv', '_submission.csv'), index=False)
 
     return data, submission_data, min_co2, max_co2
+
 
 if __name__ == '__main__':
     fileToClean = 'data/train.csv'
