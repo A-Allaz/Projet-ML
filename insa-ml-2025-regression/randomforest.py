@@ -48,27 +48,6 @@ def random_forest(df_train, target_column,hyperparameter=10):
     
     dropcols = ['id', 'co', 'hc', 'nox','ptcl','encoded_fuel_type','encoded_hybrid'] + [target_column] + categorical_cols
 
-    ###############
-    import plotly.express as px
-    import plotly.io as pio
-
-    numeric_columns = df_train.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    correlation_matrix = df_train[numeric_columns].corr()
-    correlation_matrix = correlation_matrix.reset_index().melt(id_vars='index')
-
-    # Générer la heatmap (un peu) interactive
-    fig = px.imshow(
-        df_train[numeric_columns].corr(),
-        text_auto=True,
-        color_continuous_scale="RdBu",
-        title="Matrice de Corrélation"
-    )
-
-    # Sauvegarde de la heatmap en HTML
-    with open("./plots/correlation_matrix.html", "w", encoding="utf-8") as f:
-        f.write(pio.to_html(fig, full_html=True, include_plotlyjs='cdn'))
-
-    ###############
 
     # Séparation des features et de la cible
     X = df_train.drop(columns=dropcols)  # Toutes les colonnes sauf la colonne cible
@@ -76,13 +55,6 @@ def random_forest(df_train, target_column,hyperparameter=10):
 
     numerical_cols = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
     
-    # Prétraitement des données : imputation + encodage des variables catégorielles
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('num', SimpleImputer(strategy='mean'), numerical_cols)  # Remplacement des NaN numériques par la moyenne
-        ],
-        remainder='passthrough'
-    )
     #fill na avec la moyenne pour les colonnes numériques
     for col in numerical_cols:
         X[col] = X[col].fillna(X[col].mean())
@@ -90,10 +62,8 @@ def random_forest(df_train, target_column,hyperparameter=10):
     # Définition du modèle Random Forest
     model = RandomForestRegressor(n_estimators=hyperparameter, max_depth = None , min_samples_leaf=1)
     # todo : extra trees
-
     # Création du pipeline
     pipeline = Pipeline(steps=[
-        ('preprocessor', preprocessor),
         ('regressor', model)
     ])
     

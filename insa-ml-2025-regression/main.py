@@ -36,13 +36,6 @@ def save_submission(X_sub, Y_sub, save_path: str):
     :param Y_sub: Predicted values for submission
     :param datapath: Path to save the submission file
     """
-    # return format
-    # id,co2
-    # 41257,527
-    # 41258,196
-    # 41259,457
-    # etc.
-
     # Y_sub has to be rounded
     Y_sub = Y_sub.round().astype(int)
     print(Y_sub)
@@ -54,17 +47,10 @@ def save_submission(X_sub, Y_sub, save_path: str):
     submission.to_csv(save_path, index=False)
     print(f'Submission saved to {save_path}')
 
-
 if __name__ == '__main__':
     data_path: str = 'data/train.csv'
     submission_data_path: str = 'data/submission_test.csv'
     normalisation: bool = True
-
-    device = "cpu" # Default to CPU
-    if torch.cuda.is_available():
-        device = "cuda" # Use NVIDIA GPU (if available)
-    elif torch.backends.mps.is_available():
-        device = "mps" # Use Apple Silicon GPU (if available)
 
     # preprocess the data
     X, Y, X_submission, min_co2, max_co2 = get_datasets(
