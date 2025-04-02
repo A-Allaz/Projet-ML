@@ -125,7 +125,11 @@ class MultiLayerFeedForwardModel(nn.Module):
         Y_val = torch.tensor(Y_val, dtype=torch.float32).view(-1, 1).to(self.device)
 
         dataset = TensorDataset(X_train, Y_train)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+        num_workers = 0
+        if self.device == "cuda":
+            num_workers = 4
+        # Create DataLoader for batching
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
 
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -139,6 +143,7 @@ class MultiLayerFeedForwardModel(nn.Module):
         for epoch in range(epochs):
             self.train()  # Set the model to training mode
             for batch_X, batch_Y in dataloader:
+
                 optimizer.zero_grad()
                 predictions = self.forward(batch_X)
                 loss = criterion(predictions, batch_Y)

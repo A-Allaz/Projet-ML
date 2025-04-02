@@ -9,26 +9,6 @@ import numpy as np
 from preprocess_data import PreProcessingData
 from models import LinearRegressionModel, MultiLayerFeedForwardModel
 
-def get_datasets(data_path: str, submission_data_path: str, column_target: str, normalisation: bool = True):
-    """
-    Arrange the dataset by dropping the target column and returning the features and target separately.
-    
-    :param dataset: DataFrame containing the dataset
-    :param column_target: The name of the target column to be dropped
-    :return: Tuple of features (X) and target (Y)
-    """
-    dataset, X_submission, min_co2, max_co2 = preprocess_data_target(
-        data_path=data_path,
-        submission_data_path=submission_data_path,
-        normalisation=normalisation,
-        save_path='data/1.csv')
-
-    X = dataset.drop(columns=[column_target])
-    Y = dataset[column_target]
-
-
-    return X, Y, X_submission, min_co2, max_co2
-
 def save_submission(X_sub, Y_sub, save_path: str):
     """
     Save the submission data to a CSV file.
@@ -53,7 +33,7 @@ if __name__ == '__main__':
     submission_data_path: str = 'data/submission_test.csv'
     normalisation: bool = True
 
-    data: PreProcessingData = PreProcessingData(
+    data = PreProcessingData(
         data_path=data_path,
         submission_data_path=submission_data_path,
         target_column='co2',
@@ -66,29 +46,29 @@ if __name__ == '__main__':
 
     # import the model
     # model = LinearRegressionModel()
-    storage_path: str = 'network_configs/1/1_e1000_b128_p50.pth'
+    storage_path: str = 'network_configs/1/mac_test.pth'
     model = MultiLayerFeedForwardModel(
         input_size=X_train.shape[1], 
         config_path='network_configs/1/1.json',
         save_path=storage_path
     )
     
-    model.load(path=storage_path)
+    # model.load(path=storage_path)
     
-    # # train the model (without id column)
-    # model.fit(
-    #     X_train=X_train.values, 
-    #     Y_train=Y_train.values,
-    #     X_val=X_test.values,
-    #     Y_val=Y_test.values,
-    #     epochs=1000,
-    #     learning_rate=0.001,
-    #     step_size=50,
-    #     gamma=0.9,
-    #     batch_size=128,
-    #     patience=None,
-    #     store_improvement=True,
-    # )
+    # train the model (without id column)
+    model.fit(
+        X_train=X_train.values, 
+        Y_train=Y_train.values,
+        X_val=X_test.values,
+        Y_val=Y_test.values,
+        epochs=1000,
+        learning_rate=0.001,
+        step_size=50,
+        gamma=0.9,
+        batch_size=128,
+        patience=None,
+        store_improvement=True,
+    )
 
 
     # test the model
