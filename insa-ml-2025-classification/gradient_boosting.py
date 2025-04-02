@@ -27,9 +27,6 @@ model = GradientBoostingClassifier(n_estimators=5000, min_samples_split=2, min_s
 # --> {'learning_rate': 0.3, 'max_depth': 6, 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 1500} for an accuracy of .9233
 #après test : {'learning_rate': 0.45, 'max_depth': 6, 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 5000} for an accuracy of .9382
 
-# print(f'Best Parameters: {best_params}')
-# print(f'Best Cross-Validation Accuracy: {best_score}')
-
 
 # Train the model
 model.fit(X_train, y_train)
