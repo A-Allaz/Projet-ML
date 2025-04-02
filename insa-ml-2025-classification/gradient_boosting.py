@@ -23,41 +23,9 @@ X_test = test_df[features]
 
 
 # Initialize the Gradient Boosting Classifier
-model = GradientBoostingClassifier(n_estimators=1000, min_samples_split=2, min_samples_leaf=4, max_depth=5, learning_rate=0.2)
-
-""" 
-
-# Define the parameter grid
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'learning_rate': [0.01, 0.1, 0.2],
-    'max_depth': [3, 4, 5],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4]
-}
-
-
-# Set up Random Search with cross-validation
-
-random_search = RandomizedSearchCV(estimator=model, param_distributions=param_grid, n_iter=50, cv=3, scoring='accuracy', n_jobs=-1, random_state=42)
-
-# Fit Random Search to the data
-random_search.fit(X_train, y_train)
-
-# Best parameters and best score
-best_params = random_search.best_params_
-best_score = random_search.best_score_ """
-
-
-""" # Set up Grid Search with cross-validation
-grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, scoring='accuracy', n_jobs=-1)
-
-# Fit Grid Search to the data
-grid_search.fit(X_train, y_train)
-
-# Best parameters and best score
-best_params = grid_search.best_params_
-best_score = grid_search.best_score_ """
+model = GradientBoostingClassifier(n_estimators=5000, min_samples_split=2, min_samples_leaf=2, max_depth=6, learning_rate=0.45)
+# --> {'learning_rate': 0.3, 'max_depth': 6, 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 1500} for an accuracy of .9233
+#après test : {'learning_rate': 0.45, 'max_depth': 6, 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 5000} for an accuracy of .9382
 
 # print(f'Best Parameters: {best_params}')
 # print(f'Best Cross-Validation Accuracy: {best_score}')
