@@ -41,58 +41,27 @@ class PreProcessingData:
     # full execution
     def full_preprocess(self):
 
-        
+        print("Preprocessing data...")
         # ENCODING STRING COLUMNS
-        print("one hot encoding")
         self.one_hot_encoding()
 
-        
-        print("smooth target encoding")
         # # its either smooth target encoding or drop text columns
         # self.drop_text_columns()
         self.smooth_target_encoding()
 
-        print("Preprocessing data...")
-        print("combining hc and nox")
         self.combine_hc_nox()
 
-        print("Dropping low correlation columns")
         self.drop_low_correlation_columns()
 
-        print("Filling na values")
         self.fill_na_values()
 
-        # Assuming y_sub is a NumPy array
-        nan_indices = np.isnan(self.x)
-
-        # Check if there are any NaN values
-        if np.any(nan_indices):
-            print("There are NaN values in x.")
-        else:
-            print("There are no NaN values in x.")
-
-        # Assuming y_sub is a NumPy array
-        nan_indices = np.isnan(self.sub_x)
-        # Check if there are any NaN values
-        if np.any(nan_indices):
-            print("There are NaN values in sub_x.")
-        else:
-            print("There are no NaN values in sub_x.")
-        
-
-        print("normalisation")
         # NORMALISATION
         # self.normalisation_z_score() # perform normalisation on non one hot columns
         self.normalisation_min_max()
 
-        print(self.sub_x.info())
-        print(self.sub_x.head())
-
-        print (self.x.info())
-        print (self.x.head())
-
-
         print("Preprocessing done")
+
+
         return self
 
 

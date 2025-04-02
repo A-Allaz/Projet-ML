@@ -3,6 +3,7 @@ import pandas as pd
 import json
 
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 
 import torch
@@ -210,4 +211,70 @@ class MultiLayerFeedForwardModel(nn.Module):
         self.to(self.device)
         print(f'Model loaded from {path} and moved to {self.device}')
 
+class RandomForestRegressorModel(RandomForestRegressor):
+    def __init__(
+            self,
+            n_estimators=100,
+            max_depth=None,
+            criterion='squared_error',
+            min_samples_leaf=1,
+            n_jobs=-1,
+            verbose=1,
+            random_state=42,
+            save_path: str = None
+    ):
+        super().__init__(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            criterion=criterion,
+            min_samples_leaf=min_samples_leaf,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            random_state=random_state
+        )
+        self.save_path = save_path
+        self.mean_absolute_error = None
 
+    def fit(self, X, Y):
+        """
+        Fit the Random Forest model to the training data.
+        
+        :param X: Feature matrix
+        :param Y: Target vector
+        """
+        super().fit(X, Y)
+    
+    def test(self, X_test, Y_test):
+        """
+        Test the Random Forest model.
+        
+        :param X: Feature matrix
+        :param Y: Target vector
+        :return: Mean Absolute Error (MAE)
+        """
+        Y_pred = self.predict(X_test)
+        self.mean_absolute_error = mean_absolute_error(Y_test, Y_pred)
+        return self.mean_absolute_error
+    
+    def predict(self, X):
+        """
+        Predict using the Random Forest model.
+        
+        :param X: Feature matrix
+        :return: Predicted values
+        """
+        y_pred = super().predict(X)
+        return y_pred
+    
+    def store(self, path: str):
+        """Store the model parameters."""
+        with open(path, 'w') as f:
+            json.dump(self.get_params(), f)
+        print(f'Model parameters stored at {path}')
+
+    def load(self, path: str):
+        """Load the model parameters."""
+        with open(path, 'r') as f:
+            params = json.load(f)
+        self.set_params(**params)
+        print(f'Model parameters loaded from {path}')

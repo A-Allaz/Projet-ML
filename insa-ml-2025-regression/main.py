@@ -7,7 +7,7 @@ import numpy as np
 # this file is used to run models
 # it will import models and try to run them on the data
 from preprocess_data import PreProcessingData
-from models import LinearRegressionModel, MultiLayerFeedForwardModel
+from models import LinearRegressionModel, MultiLayerFeedForwardModel, RandomForestRegressorModel
 
 def save_submission(X_sub, Y_sub, save_path: str):
     """
@@ -44,18 +44,34 @@ if __name__ == '__main__':
     X_train, X_test, Y_train, Y_test = model_selection.train_test_split(data.x, data.y, test_size=0.2, random_state=42)
 
 
+
+    #__________________________________ MODEL
     # import the model
     # model = LinearRegressionModel()
-    storage_path: str = 'network_configs/1/mac_test.pth'
-    model = MultiLayerFeedForwardModel(
-        input_size=X_train.shape[1], 
-        config_path='network_configs/1/1.json',
-        save_path=storage_path
+    # model = MultiLayerFeedForwardModel(
+    #     input_size=X_train.shape[1], 
+    #     config_path='network_configs/1/1.json',
+    #     save_path=storage_path
+    # )
+    storage_path: str = 'network_configs/rfr/store.json'
+    model = RandomForestRegressorModel(
+        n_estimators=31,
+        max_depth=None,
+        criterion='squared_error',
+        min_samples_leaf=1,
+        n_jobs=-1,
+        verbose=1,
+        random_state=42
     )
+
+    #__________________________________ LOAD
+
+    # model.load(path=storage_path)
+
+    #__________________________________ FIT
+
     
-    model.load(path=storage_path)
-    
-    # # train the model (without id column)
+    # train the model (without id column)
     # model.fit(
     #     X_train=X_train.values, 
     #     Y_train=Y_train.values,
@@ -69,7 +85,16 @@ if __name__ == '__main__':
     #     patience=None,
     #     store_improvement=True,
     # )
+    model.fit(
+        X_train, 
+        Y_train
+    )
 
+    #__________________________________ STORE
+
+    # model.store(path=storage_path)
+
+    #___________________________________ SUBMISSION TEST
 
     # test the model
     mae = model.test(
@@ -83,14 +108,10 @@ if __name__ == '__main__':
     y_sub = model.predict(
         X=data.sub_x.values
     )
-    y_testing = model.predict(
-        X=X_test.values
-    )
-
     
     y_sub = data.denormalise_output(output=y_sub.flatten())
     # denormalize the predicted values
 
     # save the submission
-    save_path = 'submission_data/multilayer.csv'
+    save_path = 'submission_data/rfr.csv'
     save_submission(data.sub_data, y_sub, save_path)
