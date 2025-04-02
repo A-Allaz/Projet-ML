@@ -202,8 +202,12 @@ class MultiLayerFeedForwardModel(nn.Module):
         torch.save(self.state_dict(), path)
         print(f'Model stored at {path}')
     
-    def load(self, path:str):
+    def load(self, path: str):
         """Load the model parameters."""
-        self.load_state_dict(torch.load(path))
-        print(f'Model loaded from {path}')
+        # Load the model onto the CPU first
+        self.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
+        # Move the model to the appropriate device
+        self.to(self.device)
+        print(f'Model loaded from {path} and moved to {self.device}')
+
 

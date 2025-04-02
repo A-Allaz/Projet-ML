@@ -40,7 +40,7 @@ if __name__ == '__main__':
     ).full_preprocess()
     
 
-    # split the data into train and test sets
+    # # split the data into train and test sets
     X_train, X_test, Y_train, Y_test = model_selection.train_test_split(data.x, data.y, test_size=0.2, random_state=42)
 
 
@@ -53,22 +53,22 @@ if __name__ == '__main__':
         save_path=storage_path
     )
     
-    # model.load(path=storage_path)
+    model.load(path=storage_path)
     
-    # train the model (without id column)
-    model.fit(
-        X_train=X_train.values, 
-        Y_train=Y_train.values,
-        X_val=X_test.values,
-        Y_val=Y_test.values,
-        epochs=1000,
-        learning_rate=0.001,
-        step_size=50,
-        gamma=0.9,
-        batch_size=128,
-        patience=None,
-        store_improvement=True,
-    )
+    # # train the model (without id column)
+    # model.fit(
+    #     X_train=X_train.values, 
+    #     Y_train=Y_train.values,
+    #     X_val=X_test.values,
+    #     Y_val=Y_test.values,
+    #     epochs=1000,
+    #     learning_rate=0.001,
+    #     step_size=50,
+    #     gamma=0.9,
+    #     batch_size=128,
+    #     patience=None,
+    #     store_improvement=True,
+    # )
 
 
     # test the model
@@ -77,7 +77,6 @@ if __name__ == '__main__':
         Y_test=Y_test.values
     )
     print(f'MAE: {data.denormalise_mae(mae)}')
-
 
 
     # predict on the submission data
@@ -89,21 +88,8 @@ if __name__ == '__main__':
     )
 
     
-    # Assuming y_sub is a NumPy array
-    nan_indices = np.isnan(data.sub_x)
-    # Check if there are any NaN values
-    if np.any(nan_indices):
-        print("There are NaN values in y_sub.")
-        # Optionally, print the indices of NaN values
-        print("Indices of NaN values:", np.where(nan_indices))
-    else:
-        print("There are no NaN values in y_sub.")
-
-
     y_sub = data.denormalise_output(output=y_sub.flatten())
     # denormalize the predicted values
-
-
 
     # save the submission
     save_path = 'submission_data/multilayer.csv'
