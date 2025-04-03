@@ -7,7 +7,7 @@ import numpy as np
 # this file is used to run models
 # it will import models and try to run them on the data
 from preprocess_data import PreProcessingData
-from models import LinearRegressionModel, MultiLayerFeedForwardModel, RandomForestRegressorModel
+from models import LinearRegressionModel, MultiLayerFeedForwardModel, RandomForestRegressorModel, ExtraTreesRegressorModel
 
 def save_submission(X_sub, Y_sub, save_path: str):
     """
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     
 
     # # split the data into train and test sets
-    X_train, X_test, Y_train, Y_test = model_selection.train_test_split(data.x, data.y, test_size=0.2, random_state=42)
+    X_train, X_test, Y_train, Y_test = model_selection.train_test_split(data.x, data.y, test_size=0.01, random_state=42)
 
 
 
@@ -54,8 +54,8 @@ if __name__ == '__main__':
     #     save_path=storage_path
     # )
     storage_path: str = 'network_configs/rfr/store.json'
-    model = RandomForestRegressorModel(
-        n_estimators=31,
+    model = ExtraTreesRegressorModel(
+        n_estimators=24,
         max_depth=None,
         criterion='squared_error',
         min_samples_leaf=1,
@@ -103,6 +103,12 @@ if __name__ == '__main__':
     )
     print(f'MAE: {data.denormalise_mae(mae)}')
 
+
+    # # fit over the entire training set
+    # model.fit(
+    #     X=data.x.values, 
+    #     Y=data.y.values,
+    # )
 
     # predict on the submission data
     y_sub = model.predict(

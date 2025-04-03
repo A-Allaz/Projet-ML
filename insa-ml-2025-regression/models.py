@@ -4,6 +4,7 @@ import json
 
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.metrics import mean_absolute_error
 
 import torch
@@ -268,6 +269,67 @@ class RandomForestRegressorModel(RandomForestRegressor):
     
     def store(self, path: str):
         """Store the model parameters."""
+        with open(path, 'w') as f:
+            json.dump(self.get_params(), f)
+        print(f'Model parameters stored at {path}')
+
+    def load(self, path: str):
+        """Load the model parameters."""
+        with open(path, 'r') as f:
+            params = json.load(f)
+        self.set_params(**params)
+        print(f'Model parameters loaded from {path}')
+
+class ExtraTreesRegressorModel(ExtraTreesRegressor):
+    def __init__(
+            self,
+            n_estimators=100,
+            max_depth=None,
+            criterion='squared_error',
+            min_samples_leaf=1,
+            n_jobs=-1,
+            verbose=1,
+            random_state=42,
+            save_path: str = None
+    ):
+        super().__init__(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            criterion=criterion,
+            min_samples_leaf=min_samples_leaf,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            random_state=random_state
+        )
+        self.save_path = save_path
+        self.mean_absolute_error = None
+    
+    def fit(self, X, Y):
+        """
+        Fit the Extra Trees model to the training data.
+        
+        :param X: Feature matrix
+        :param Y: Target vector
+        """
+        super().fit(X, Y)
+    
+    def test(self, X_test, Y_test):
+        """
+        Test the Extra Trees model.
+        """
+        Y_pred = self.predict(X_test)
+        self.mean_absolute_error = mean_absolute_error(Y_test, Y_pred)
+        return self.mean_absolute_error
+    
+    def predict(self, X):
+        """
+        Predict using the Extra Trees model.
+        """
+        y_pred = super().predict(X)
+        return y_pred
+    
+    def store(self, path: str):
+        """ Store the model parameters. """
         with open(path, 'w') as f:
             json.dump(self.get_params(), f)
         print(f'Model parameters stored at {path}')

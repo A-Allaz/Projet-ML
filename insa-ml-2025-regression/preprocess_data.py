@@ -42,22 +42,27 @@ class PreProcessingData:
     def full_preprocess(self):
 
         print("Preprocessing data...")
+
+        # self.delete_outliers()
+
         # ENCODING STRING COLUMNS
-        self.one_hot_encoding()
+        self.one_hot_encoding(threshold=100000)
 
         # # its either smooth target encoding or drop text columns
-        # self.drop_text_columns()
-        self.smooth_target_encoding()
+        self.drop_text_columns()
+        # self.smooth_target_encoding()
 
         self.combine_hc_nox()
 
         self.drop_low_correlation_columns()
 
         self.fill_na_values()
+        
 
         # NORMALISATION
         # self.normalisation_z_score() # perform normalisation on non one hot columns
         self.normalisation_min_max()
+
 
         print("Preprocessing done")
 
@@ -71,7 +76,7 @@ class PreProcessingData:
         self.x.to_csv(save_path, index=False)
         
     def drop_low_correlation_columns(self):
-        dropcols = ['id', 'co', 'hc', 'nox', 'ptcl', 'hybrid', 'fuel_type']
+        dropcols = ['id', 'co', 'ptcl', 'hybrid', 'fuel_type']
         dropcols = [col for col in dropcols if col in self.x.columns]
         # drop the columns
         self.x = self.x.drop(columns=dropcols)
@@ -172,8 +177,12 @@ class PreProcessingData:
         if ('hc' in self.x.columns) and ('nox' in self.x.columns):
             # fill the missing values with the sum of hc and nox
             self.x['hcnox'] = self.x['hcnox'].fillna(self.x['hc'] + self.x['nox'])
+            self.x['hc'] = self.x['hc'].fillna(self.x['hcnox'] - self.x['nox'])
+            self.x['nox'] = self.x['nox'].fillna(self.x['hcnox'] + self.x['hc'])
             # fill the missing values in submission data
             self.sub_x['hcnox'] = self.sub_x['hcnox'].fillna(self.sub_x['hc'] + self.sub_x['nox'])
+            self.sub_x['hc'] = self.sub_x['hc'].fillna(self.sub_x['hcnox'] - self.sub_x['nox'])
+            self.sub_x['nox'] = self.sub_x['nox'].fillna(self.sub_x['hcnox'] + self.sub_x['hc'])
         
     def smooth_target_encoding(
             self,
@@ -239,6 +248,45 @@ class PreProcessingData:
                     self.sub_x[c] = 0
                 self.sub_x = self.sub_x[self.x.columns]
 
+
+    def delete_outliers(self):
+        # delete the outliers in the data
+        # using the IRQ method
+        # for each column that contains float or int values
+        # we will use the IRQ method to delete the outliers
+
+        # categorical columns
+        categorical_cols = self.data.select_dtypes(include=['object']).columns.tolist()
+        
+        df = self.x.copy()
+        df['co2'] = self.y  # Ajout temporaire de la target pour conserver la correspondance
+
+        df_filtered = pd.DataFrame()  # Pour stocker les données filtrées
+
+        grouped = df.groupby(categorical_cols)  # Groupement par catégorie
+
+        for group_name, group_data in grouped:
+
+            Q1 = group_data['co2'].quantile(0.25)
+            Q3 = group_data['co2'].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+
+
+            # Filtrer sur co2 uniquement
+            filtered_group = group_data[(group_data['co2'] >= lower_bound) & (group_data['co2'] <= upper_bound)]
+
+            df_filtered = pd.concat([df_filtered, filtered_group])
+
+        # afficher le nombre d'outliers supprimés
+        print(f"Nombre d'outliers supprimés : {len(df) - len(df_filtered)}")
+
+
+        # Mise à jour des attributs X et y après filtrage
+        self.x = df_filtered.drop(columns=['co2'])
+        self.y = df_filtered['co2']
+        
 
 
 
