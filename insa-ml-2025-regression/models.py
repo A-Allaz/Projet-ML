@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 import json
 
 from sklearn.linear_model import LinearRegression
@@ -16,14 +14,7 @@ class LinearRegressionModel:
     def __init__(self):
         self.model = LinearRegression()
         self.mean_absolute_error = None
-        device = "cpu" # Default to CPU
-        if torch.cuda.is_available():
-            device = "cuda" # Use NVIDIA GPU (if available)
-        elif torch.backends.mps.is_available():
-            device = "mps" # Use Apple Silicon GPU (if available)
 
-        self.device = device
-        print(f"Using {self.device} device for model")
 
     def fit(self, X, Y):
         """
@@ -97,8 +88,8 @@ class MultiLayerFeedForwardModel(nn.Module):
     def fit(self,
         X_train,
         Y_train,
-        X_val,
-        Y_val,
+        X_validation,
+        Y_validation,
         epochs=2000,
         learning_rate=0.01,
         step_size=100,
@@ -113,18 +104,19 @@ class MultiLayerFeedForwardModel(nn.Module):
 
         :param X_train: Training feature matrix
         :param Y_train: Training target vector
-        :param X_val: Validation feature matrix
-        :param Y_val: Validation target vector
+        :param X_validation: Validation feature matrix
+        :param Y_validation: Validation target vector
         :param epochs: Number of epochs to train
         :param learning_rate: Initial learning rate
         :param step_size: Number of epochs after which LR is reduced
         :param gamma: Multiplicative factor to reduce LR
         :param patience: Number of epochs to wait for improvement before stopping
         """
+        print(f"Training on {self.device} device")
         X_train = torch.tensor(X_train, dtype=torch.float32).to(self.device)
         Y_train = torch.tensor(Y_train, dtype=torch.float32).view(-1, 1).to(self.device)
-        X_val = torch.tensor(X_val, dtype=torch.float32).to(self.device)
-        Y_val = torch.tensor(Y_val, dtype=torch.float32).view(-1, 1).to(self.device)
+        X_validation = torch.tensor(X_validation, dtype=torch.float32).to(self.device)
+        Y_validation = torch.tensor(Y_validation, dtype=torch.float32).view(-1, 1).to(self.device)
 
         dataset = TensorDataset(X_train, Y_train)
         num_workers = 0
@@ -160,8 +152,8 @@ class MultiLayerFeedForwardModel(nn.Module):
                 # Validation phase
                 self.eval()  # Set the model to evaluation mode
                 with torch.no_grad():
-                    val_predictions = self.forward(X_val)
-                    val_loss = criterion(val_predictions, Y_val).item()
+                    val_predictions = self.forward(X_validation)
+                    val_loss = criterion(val_predictions, Y_validation).item()
 
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
@@ -179,17 +171,17 @@ class MultiLayerFeedForwardModel(nn.Module):
 
 
 
-    def test(self, X_test, Y_test):
+    def test(self, X, Y):
         """Evaluate the model and return MAE."""
 
-        X_test = torch.tensor(X_test, dtype=torch.float32).to(self.device)
-        Y_test = torch.tensor(Y_test, dtype=torch.float32).view(-1, 1).to(self.device)
+        X = torch.tensor(X, dtype=torch.float32).to(self.device)
+        Y = torch.tensor(Y, dtype=torch.float32).view(-1, 1).to(self.device)
 
         with torch.no_grad():
-            predictions = self.forward(X_test)
+            predictions = self.forward(X)
 
         # Move tensors to CPU before converting to NumPy
-        mae = mean_absolute_error(Y_test.cpu().numpy(), predictions.cpu().numpy())
+        mae = mean_absolute_error(Y.cpu().numpy(), predictions.cpu().numpy())
         return mae
 
 
@@ -245,7 +237,7 @@ class RandomForestRegressorModel(RandomForestRegressor):
         """
         super().fit(X, Y)
     
-    def test(self, X_test, Y_test):
+    def test(self, X, Y):
         """
         Test the Random Forest model.
         
@@ -253,8 +245,8 @@ class RandomForestRegressorModel(RandomForestRegressor):
         :param Y: Target vector
         :return: Mean Absolute Error (MAE)
         """
-        Y_pred = self.predict(X_test)
-        self.mean_absolute_error = mean_absolute_error(Y_test, Y_pred)
+        Y_pred = self.predict(X)
+        self.mean_absolute_error = mean_absolute_error(Y, Y_pred)
         return self.mean_absolute_error
     
     def predict(self, X):
@@ -287,6 +279,7 @@ class ExtraTreesRegressorModel(ExtraTreesRegressor):
             max_depth=None,
             criterion='squared_error',
             min_samples_leaf=1,
+            bootstrap=False,
             n_jobs=-1,
             verbose=1,
             random_state=42,
@@ -296,6 +289,7 @@ class ExtraTreesRegressorModel(ExtraTreesRegressor):
             n_estimators=n_estimators,
             max_depth=max_depth,
             criterion=criterion,
+            bootstrap=bootstrap,
             min_samples_leaf=min_samples_leaf,
             n_jobs=n_jobs,
             verbose=verbose,
@@ -313,12 +307,12 @@ class ExtraTreesRegressorModel(ExtraTreesRegressor):
         """
         super().fit(X, Y)
     
-    def test(self, X_test, Y_test):
+    def test(self, X, Y):
         """
         Test the Extra Trees model.
         """
-        Y_pred = self.predict(X_test)
-        self.mean_absolute_error = mean_absolute_error(Y_test, Y_pred)
+        Y_pred = self.predict(X)
+        self.mean_absolute_error = mean_absolute_error(Y, Y_pred)
         return self.mean_absolute_error
     
     def predict(self, X):

@@ -1,9 +1,3 @@
 pandas
-numpy
 scikit-learn
-matplotlib
-seaborn
-mpld3
-plotly
 torch
-torchvision
